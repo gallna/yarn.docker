@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+
+  <property>
+    <name>mapreduce.framework.name</name>
+    <value>yarn</value>
+  </property>
+
+  <!-- job-history server configuration -->
+  <property>
+    <name>mapreduce.jobhistory.address</name>
+    <value>job-history.docker:10020</value>
+  </property>
+  
+  <property>
+    <name>mapreduce.jobhistory.webapp.address</name>
+    <value>job-history.docker:19888</value>
+  </property>
+
+</configuration>

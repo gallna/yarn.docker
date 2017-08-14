@@ -1,0 +1,48 @@
+FROM centos:centos6
+
+ENV USER=root \
+    HADOOP_HOME=/usr/local/hadoop \
+    HADOOP_PREFIX=/usr/local/hadoop \
+    HADOOP_COMMON_HOME=/usr/local/hadoop \
+    HADOOP_HDFS_HOME=/usr/local/hadoop \
+    HADOOP_MAPRED_HOME=/usr/local/hadoop \
+    HADOOP_YARN_HOME=/usr/local/hadoop \
+    HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop \
+    YARN_CONF_DIR=/usr/local/hadoop/etc/hadoop \
+    JAVA_HOME=/usr/java/default \
+    PATH=$PATH:/usr/java/default/bin:/usr/local/hadoop/bin
+
+# Hdfs and Yarn ports
+EXPOSE 50010 50020 50070 50075 50090 8020 9000 10020 19888 8030 8031 8032 8033 8040 8042 8088 49707
+
+# install dev tools
+RUN yum install -y curl tar
+
+# java
+RUN curl -LO 'http://download.oracle.com/otn-pub/java/jdk/7u71-b14/jdk-7u71-linux-x64.rpm' -H 'Cookie: oraclelicense=accept-securebackup-cookie' && \
+    rpm -i jdk-7u71-linux-x64.rpm && rm jdk-7u71-linux-x64.rpm && \
+    rm /usr/bin/java && ln -s $JAVA_HOME/bin/java /usr/bin/java
+
+# hadoop workdir
+WORKDIR $HADOOP_HOME
+
+# hadoop
+RUN curl -s http://www.eu.apache.org/dist/hadoop/common/hadoop-2.7.3/hadoop-2.7.3.tar.gz | tar -xz --strip=1 -C $HADOOP_HOME && \
+    cp $HADOOP_HOME/lib/native/* $HADOOP_HOME/lib && \
+    rm -f etc/hadoop/core-site.xml
+
+# log4j configuration
+ADD log4j.properties /usr/local/hadoop/etc/hadoop/log4j.properties
+
+# basic configuration
+ADD core-site.xml etc/hadoop/core-site.xml
+ADD hdfs-site.xml etc/hadoop/hdfs-site.xml
+ADD yarn-site.xml etc/hadoop/yarn-site.xml
+ADD mapred-site.xml etc/hadoop/mapred-site.xml
+
+# entrypoint script
+ADD entrypoint.sh /usr/local/hadoop/bin/entrypoint.sh
+ENTRYPOINT /usr/local/hadoop/bin/entrypoint.sh
+
+# default command: entrypoint help message
+CMD ["--help"]

@@ -1,0 +1,44 @@
+hdfs:
+  build: .
+  dockerfile: "Dockerfile.hadoop"
+  volumes:
+    - ./bin/entrypoint.sh:/usr/local/hadoop/bin/entrypoint.sh
+    - ./etc/hadoop/yarn-env.sh:/usr/local/hadoop/etc/hadoop/yarn-env.sh
+    - ./etc/hadoop/hadoop-env.sh:/usr/local/hadoop/etc/hadoop/hadoop-env.sh
+    - ./etc/hadoop/log4j.properties:/usr/local/hadoop/etc/hadoop/log4j.properties
+    # - ./etc/hadoop/core-site.xml:/usr/local/hadoop/etc/hadoop/core-site.xml
+    # - ./etc/hadoop/hdfs-site.xml:/usr/local/hadoop/etc/hadoop/hdfs-site.xml
+    # - ./etc/hadoop/yarn-site.xml:/usr/local/hadoop/etc/hadoop/yarn-site.xml
+    # - ./etc/hadoop/mapred-site.xml:/usr/local/hadoop/etc/hadoop/mapred-site.xml
+
+namenode:
+  extends: hdfs
+  entrypoint: entrypoint.sh -N
+  container_name: namenode
+  hostname: namenode.docker
+  ports:
+    - 50070
+    - 8088
+
+datanode:
+  extends: hdfs
+  entrypoint: entrypoint.sh --datanode
+  container_name: datanode
+  hostname: datanode.docker
+  dns_search: docker
+
+resource-manager:
+  extends: hdfs
+  entrypoint: entrypoint.sh --resource-manager
+  container_name: resource-manager
+  hostname: resource-manager.docker
+  ports:
+    - 8088
+
+job-history:
+  extends: hdfs
+  entrypoint: entrypoint.sh --job-history
+  container_name: job-history
+  hostname: job-history.docker
+  ports:
+    - 19888

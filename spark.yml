@@ -1,0 +1,70 @@
+spark:
+  build: .
+  dockerfile: "Dockerfile.spark"
+  environment:
+    YARN_HEAPSIZE: 8000
+  volumes:
+    - ./bin/entrypoint.sh:/usr/local/hadoop/bin/entrypoint.sh
+    - ./etc/hadoop/yarn-env.sh:/usr/local/hadoop/etc/hadoop/yarn-env.sh
+    - ./etc/hadoop/hadoop-env.sh:/usr/local/hadoop/etc/hadoop/hadoop-env.sh
+    - ./etc/hadoop/log4j.properties:/usr/local/hadoop/etc/hadoop/log4j.properties
+    # - ./etc/hadoop/core-site.xml:/usr/local/hadoop/etc/hadoop/core-site.xml
+    # - ./etc/hadoop/hdfs-site.xml:/usr/local/hadoop/etc/hadoop/hdfs-site.xml
+    # - ./etc/hadoop/yarn-site.xml:/usr/local/hadoop/etc/hadoop/yarn-site.xml
+    # - ./etc/hadoop/mapred-site.xml:/usr/local/hadoop/etc/hadoop/mapred-site.xml
+
+spark-master:
+  extends: spark
+  entrypoint: /usr/local/hadoop/bin/entrypoint.sh --sparkmaster
+  container_name: spark-master
+  hostname: spark-master.docker
+  environment:
+    PYTHONPATH: /usr/local/spark/dist
+    PYSPARK_PYTHON: /usr/bin/python3
+  expose:
+    - 7001
+    - 7002
+    - 7003
+    - 7004
+    - 7005
+    - 7006
+    - 7077
+    - 6066
+  ports:
+    - 4040:4040
+    - 6066:6066
+    - 7077:7077
+    - 8080:8080
+  volumes:
+    - ./etc/spark-master/log4j.properties:/usr/local/spark/conf/log4j.properties
+    - ./etc/spark-master/spark-defaults.conf:/usr/local/spark/conf/spark-defaults.conf
+
+spark-worker:
+  extends: spark
+  entrypoint: /usr/local/hadoop/bin/entrypoint.sh -W
+  container_name: spark-worker
+  hostname: spark-worker.docker
+  environment:
+    PYTHONPATH: /usr/local/spark/dist
+    PYSPARK_PYTHON: /usr/bin/python3
+    SPARK_WORKER_PORT: 8881
+    SPARK_WORKER_WEBUI_PORT: 8081
+  expose:
+    - 7011
+    - 7012
+    - 7013
+    - 7014
+    - 7015
+    - 7016
+    - 8881
+  volumes:
+    - ./etc/spark-worker/log4j.properties:/usr/local/spark/conf/log4j.properties
+    - ./etc/spark-worker/spark-defaults.conf:/usr/local/spark/conf/spark-defaults.conf
+
+spark-history:
+  extends: spark
+  entrypoint: /usr/local/hadoop/bin/entrypoint.sh --spark-history
+  container_name: spark-history
+  hostname: spark-history.docker
+  ports:
+    - 18080

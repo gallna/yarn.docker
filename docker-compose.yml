@@ -1,0 +1,63 @@
+namenode:
+  extends:
+    file: hadoop.yml
+    service: namenode
+  volumes:
+    - /tmp/hdfs/namenode:/hdfs
+
+datanode:
+  extends:
+    file: hadoop.yml
+    service: datanode
+  links:
+    - namenode:namenode.docker
+  volumes:
+    - /tmp/hdfs/datanode:/hdfs
+
+resource-manager:
+  extends:
+    file: hadoop.yml
+    service: resource-manager
+  links:
+    - namenode:namenode.docker
+    - datanode:datanode.docker
+
+spark-master:
+  extends:
+    file: spark.yml
+    service: spark-master
+  environment:
+    PYTHONPATH: /usr/local/spark/dist
+    PYSPARK_PYTHON: /usr/bin/python3
+  links:
+    - namenode
+    - resource-manager
+
+spark-worker:
+  extends:
+    file: spark.yml
+    service: spark-worker
+  environment:
+    PYTHONPATH: /usr/local/spark/dist
+    PYSPARK_PYTHON: /usr/bin/python3
+  links:
+    - namenode
+    - resource-manager
+    - spark-master
+
+job-history:
+  extends:
+    file: hadoop.yml
+    service: job-history
+  links:
+    - namenode:namenode.docker
+    - datanode:datanode.docker
+    - resource-manager:resource-manager.docker
+
+spark-history:
+  extends:
+    file: spark.yml
+    service: spark-history
+  links:
+    - spark-master
+    - spark-worker
