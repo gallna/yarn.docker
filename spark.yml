@@ -1,10 +1,11 @@
 spark:
+  # image: gallna/spark:2.1.0
   build: .
   dockerfile: "Dockerfile.spark"
   environment:
     YARN_HEAPSIZE: 8000
   volumes:
-    - ./bin/entrypoint.sh:/usr/local/hadoop/bin/entrypoint.sh
+    - ./bin/entrypoint.sh:/usr/local/bin/entrypoint.sh
     - ./etc/hadoop/yarn-env.sh:/usr/local/hadoop/etc/hadoop/yarn-env.sh
     - ./etc/hadoop/hadoop-env.sh:/usr/local/hadoop/etc/hadoop/hadoop-env.sh
     - ./etc/hadoop/log4j.properties:/usr/local/hadoop/etc/hadoop/log4j.properties
@@ -15,7 +16,7 @@ spark:
 
 spark-master:
   extends: spark
-  entrypoint: /usr/local/hadoop/bin/entrypoint.sh --sparkmaster
+  entrypoint: entrypoint.sh --sparkmaster
   container_name: spark-master
   hostname: spark-master
   environment:
@@ -34,14 +35,13 @@ spark-master:
     - 4040:4040
     - 6066:6066
     - 7077:7077
-    - 8080:8080
   volumes:
     - ./etc/spark-master/log4j.properties:/usr/local/spark/conf/log4j.properties
     - ./etc/spark-master/spark-defaults.conf:/usr/local/spark/conf/spark-defaults.conf
 
 spark-worker:
   extends: spark
-  entrypoint: /usr/local/hadoop/bin/entrypoint.sh -W
+  entrypoint: entrypoint.sh -W
   container_name: spark-worker
   hostname: spark-worker
   environment:
@@ -63,8 +63,11 @@ spark-worker:
 
 spark-history:
   extends: spark
-  entrypoint: /usr/local/hadoop/bin/entrypoint.sh --spark-history
+  entrypoint: entrypoint.sh --spark-history
   container_name: spark-history
   hostname: spark-history
   ports:
     - 18080
+  volumes:
+    - ./etc/spark-worker/log4j.properties:/usr/local/spark/conf/log4j.properties
+    - ./etc/spark-worker/spark-defaults.conf:/usr/local/spark/conf/spark-defaults.conf

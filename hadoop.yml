@@ -3,7 +3,7 @@ hdfs:
   build: .
   dockerfile: "Dockerfile.hadoop"
   volumes:
-    - ./bin/entrypoint.sh:/usr/local/hadoop/bin/entrypoint.sh
+    - ./bin/entrypoint.sh:/usr/local/bin/entrypoint.sh
     - ./etc/hadoop/yarn-env.sh:/usr/local/hadoop/etc/hadoop/yarn-env.sh
     - ./etc/hadoop/hadoop-env.sh:/usr/local/hadoop/etc/hadoop/hadoop-env.sh
     - ./etc/hadoop/log4j.properties:/usr/local/hadoop/etc/hadoop/log4j.properties
