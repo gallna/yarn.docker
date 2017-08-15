@@ -6,7 +6,7 @@
     <!-- resource manager configuration -->
     <property>
         <name>yarn.resourcemanager.hostname</name>
-        <value>resource-manager.docker</value>
+        <value>0.0.0.0</value>
     </property>
 
     <property>
@@ -23,7 +23,10 @@
     <!-- job-history server configuration -->
     <property>
        <name>yarn.log.server.url</name>
-       <value>http://job-history.docker:19888/jobhistory/logs</value>
+       <description>
+         URL of  log aggregation server, NMs redirect web UI users to this URL where aggregated-logs are served
+      </description>
+       <value>http://job-history.docker:19888/jobhistory/logs/</value>
     </property>
     <property>
       <name>yarn.log-aggregation-enable</name>

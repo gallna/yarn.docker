@@ -8,14 +8,31 @@
   </property>
 
   <!-- job-history server configuration -->
+  <!-- https://hadoop.apache.org/docs/r2.7.2/hadoop-mapreduce-client/hadoop-mapreduce-client-core/mapred-default.xml -->
+
   <property>
     <name>mapreduce.jobhistory.address</name>
-    <value>job-history.docker:10020</value>
+    <value>0.0.0.0:10020</value>
   </property>
-  
+
+  <property>
+    <name>mapreduce.jobhistory.admin.addres</name>
+    <value>0.0.0.0:10033</value>
+  </property>
+
   <property>
     <name>mapreduce.jobhistory.webapp.address</name>
-    <value>job-history.docker:19888</value>
+    <value>0.0.0.0:19888</value>
+  </property>
+
+  <property>
+    <name>mapreduce.jobtracker.http.address</name>
+    <value>0.0.0.0:50030</value>
+  </property>
+
+  <property>
+    <name>mapreduce.tasktracker.http.address</name>
+    <value>0.0.0.0:50060</value>
   </property>
 
 </configuration>

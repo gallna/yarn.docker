@@ -19,8 +19,8 @@ namenode() {
 
 ### DataNode
 datanode() {
-  # Run a script to start DataNodes on all slaves:
   $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR datanode
+  # Run a script to start DataNodes on all slaves:
   # $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start datanode
 }
 
@@ -55,8 +55,6 @@ node-manager() {
 
 ### ResourceManager
 resource-manager() {
-  echo YARN_LOG_DIR="$HADOOP_YARN_HOME/logs"
-  sleep
   # Start the YARN with the following command, run on the designated ResourceManager:
   $HADOOP_YARN_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager || cat ${logs}/*
 }
@@ -69,8 +67,9 @@ web-app-proxy() {
 
 ### MapReduce JobHistory Server
 job-history() {
+  $HADOOP_PREFIX/bin/mapred --config $HADOOP_CONF_DIR historyserver
   # Start the MapReduce JobHistory Server with the following command, run on the designated server:
-  $HADOOP_PREFIX/sbin/mr-jobhistory-daemon.sh --config $HADOOP_CONF_DIR start historyserver
+  # $HADOOP_PREFIX/sbin/mr-jobhistory-daemon.sh --config $HADOOP_CONF_DIR start historyserver
   PID=$(cat $(find ${HADOOP_MAPRED_PID_DIR-/tmp} -name "mapred-*.pid"))
 }
 

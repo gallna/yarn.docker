@@ -10,7 +10,7 @@ datanode:
     file: hadoop.yml
     service: datanode
   links:
-    - namenode:namenode.docker
+    - namenode:namenode
   volumes:
     - /tmp/hdfs/datanode:/hdfs
 
@@ -19,8 +19,8 @@ resource-manager:
     file: hadoop.yml
     service: resource-manager
   links:
-    - namenode:namenode.docker
-    - datanode:datanode.docker
+    - namenode
+    - datanode
 
 spark-master:
   extends:
@@ -50,9 +50,9 @@ job-history:
     file: hadoop.yml
     service: job-history
   links:
-    - namenode:namenode.docker
-    - datanode:datanode.docker
-    - resource-manager:resource-manager.docker
+    - namenode
+    - datanode
+    - resource-manager
 
 spark-history:
   extends:

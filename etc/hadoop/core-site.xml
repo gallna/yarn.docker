@@ -4,8 +4,7 @@
 
     <property>
       <name>fs.defaultFS</name>
-      <value>hdfs://namenode.docker:8020</value>
-      <final>true</final>
+      <value>hdfs://namenode:8020</value>
     </property>
 
     <property>

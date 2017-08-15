@@ -41,6 +41,8 @@ docker run -ti -v /home/tomasz/data/gfstriped/s3:/s3 -v /home/tomasz/projects/bi
 
 # Knowledge base
 
+[hadoop default ports](http://blog.cloudera.com/blog/2009/08/hadoop-default-ports-quick-reference/)
+
 ## Docker DNS configuration
 
 [Docker DNS-gen](https://github.com/jderusse/docker-dns-gen)

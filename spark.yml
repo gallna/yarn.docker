@@ -17,7 +17,7 @@ spark-master:
   extends: spark
   entrypoint: /usr/local/hadoop/bin/entrypoint.sh --sparkmaster
   container_name: spark-master
-  hostname: spark-master.docker
+  hostname: spark-master
   environment:
     PYTHONPATH: /usr/local/spark/dist
     PYSPARK_PYTHON: /usr/bin/python3
@@ -43,7 +43,7 @@ spark-worker:
   extends: spark
   entrypoint: /usr/local/hadoop/bin/entrypoint.sh -W
   container_name: spark-worker
-  hostname: spark-worker.docker
+  hostname: spark-worker
   environment:
     PYTHONPATH: /usr/local/spark/dist
     PYSPARK_PYTHON: /usr/bin/python3
@@ -65,6 +65,6 @@ spark-history:
   extends: spark
   entrypoint: /usr/local/hadoop/bin/entrypoint.sh --spark-history
   container_name: spark-history
-  hostname: spark-history.docker
+  hostname: spark-history
   ports:
     - 18080
