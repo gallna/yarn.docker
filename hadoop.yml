@@ -1,5 +1,5 @@
 hdfs:
-  # image: gallna/hadoop:2.7.3
+  # image: gallna/hadoop:2.7.3-2
   build: .
   dockerfile: "Dockerfile.hadoop"
   volumes:

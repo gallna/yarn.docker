@@ -10,6 +10,28 @@
     </property>
 
     <property>
+      <name>yarn.resourcemanager.address</name>
+      <value>resource-manager:8032</value>
+    </property>
+
+    <property>
+      <name>yarn.resourcemanager.scheduler.address</name>
+      <value>resource-manager:8030</value>
+    </property>
+
+    <property>
+      <name>yarn.resourcemanager.resource-tracker.address</name>
+      <value>resource-manager:8031</value>
+    </property>
+
+    <!-- yarn.resourcemanager.scheduler.address	${yarn.resourcemanager.hostname}:8030
+    yarn.resourcemanager.resource-tracker.address	${yarn.resourcemanager.hostname}:8031
+    yarn.resourcemanager.address	${yarn.resourcemanager.hostname}:8032
+    yarn.resourcemanager.admin.address	${yarn.resourcemanager.hostname}:8033
+    yarn.resourcemanager.webapp.address	${yarn.resourcemanager.hostname}:8088
+    yarn.resourcemanager.webapp.https.address	${yarn.resourcemanager.hostname}:8090 -->
+
+    <property>
       <name>yarn.nodemanager.aux-services</name>
       <value>spark_shuffle</value>
     </property>
@@ -26,7 +48,7 @@
        <description>
          URL of  log aggregation server, NMs redirect web UI users to this URL where aggregated-logs are served
       </description>
-       <value>http://job-history.docker:19888/jobhistory/logs/</value>
+       <value>http://job-history:19888/jobhistory/logs/</value>
     </property>
     <property>
       <name>yarn.log-aggregation-enable</name>

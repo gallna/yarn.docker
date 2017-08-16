@@ -1,4 +1,4 @@
-FROM gallna/hadoop:2.7.3
+FROM gallna/yarn.hadoop:2.7.3
 
 EXPOSE 4040 6066 7077 8080
 ENV SPARK_HOME=/usr/local/spark

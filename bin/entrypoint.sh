@@ -4,22 +4,31 @@
 # set -o errexit
 # Exit on error inside any functions or subshells.
 # set -o errtrace
-echo "$0: ${@-}"
+
+print_env() {
+  printenv | sort
+  echo && IFS=:; printf "%s\n" $PATH && echo
+  echo && IFS=:; printf "%s\n" $CLASSPATH && echo
+  echo && IFS=:; printf "%s\n" $(hdfs classpath) && echo
+}
+. $HADOOP_PREFIX/libexec/hdfs-config.sh
 
 HDFS_CLUSTER_NAME=${HDFS_CLUSTER_NAME-"the-cluster"}
 
 ### NameNode
 namenode() {
+  # . $HADOOP_PREFIX/libexec/hdfs-config.sh
   # Formats the specified NameNode. Note: -nonInteractive option aborts formating if the name directory exists,.
-  $HADOOP_PREFIX/bin/hdfs namenode -format $HDFS_CLUSTER_NAME -nonInteractive;
+  hdfs namenode -format $HDFS_CLUSTER_NAME -nonInteractive;
   # Start the HDFS with the following command, run on the designated NameNode:
-  $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode
+  hdfs namenode
   # $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start namenode
 }
 
 ### DataNode
 datanode() {
-  $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR datanode
+  # . $HADOOP_PREFIX/libexec/hdfs-config.sh
+  hdfs datanode
   # Run a script to start DataNodes on all slaves:
   # $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start datanode
 }
@@ -40,9 +49,7 @@ sparkworker() {
 ### Spark JobHistory Server
 spark-history() {
   # Start the MapReduce Spark Server with the following command, run on the designated server:
-  $HADOOP_PREFIX/bin/hdfs dfs -mkdir -p /shared/spark-logs
-  $HADOOP_PREFIX/bin/hdfs dfs -ls /
-  $HADOOP_PREFIX/bin/hdfs dfs -ls /shared
+  hdfs dfs -mkdir -p /shared/spark-logs
   $SPARK_HOME/bin/spark-class org.apache.spark.deploy.history.HistoryServer
   stdout-logs ${SPARK_HOME}/logs
 }
@@ -50,24 +57,24 @@ spark-history() {
 ### NodeManager
 node-manager() {
   # Run a script to start NodeManagers on all slaves:
-  $HADOOP_YARN_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start nodemanager
+  $HADOOP_YARN_HOME/sbin/yarn-daemon.sh start nodemanager
 }
 
 ### ResourceManager
 resource-manager() {
   # Start the YARN with the following command, run on the designated ResourceManager:
-  $HADOOP_YARN_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start resourcemanager || cat ${logs}/*
+  $HADOOP_YARN_HOME/sbin/yarn-daemon.sh start resourcemanager
 }
 
 ### WebAppProxy server
 web-app-proxy() {
   # Start a standalone WebAppProxy server. If multiple servers are used with load balancing it should be run on each of them:
-  $HADOOP_YARN_HOME/sbin/yarn-daemon.sh --config $HADOOP_CONF_DIR start proxyserver
+  $HADOOP_YARN_HOME/sbin/yarn-daemon.sh start proxyserver
 }
 
 ### MapReduce JobHistory Server
 job-history() {
-  $HADOOP_PREFIX/bin/mapred --config $HADOOP_CONF_DIR historyserver
+  $HADOOP_PREFIX/bin/mapred historyserver
   # Start the MapReduce JobHistory Server with the following command, run on the designated server:
   # $HADOOP_PREFIX/sbin/mr-jobhistory-daemon.sh --config $HADOOP_CONF_DIR start historyserver
   PID=$(cat $(find ${HADOOP_MAPRED_PID_DIR-/tmp} -name "mapred-*.pid"))
