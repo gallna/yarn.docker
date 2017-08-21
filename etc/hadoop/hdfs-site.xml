@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration>
 
     <property>
@@ -21,18 +20,15 @@
       <name>dfs.namenode.servicerpc-bind-host</name>
       <value>0.0.0.0</value>
     </property>
-<!-- 
+
     <property>
-      <name>dfs.namenode.rpc-address</name>
-      <value>0.0.0.0:54456</value>
+      <name>dfs.datanode.use.datanode.hostname</name>
+      <value>false</value>
     </property>
 
     <property>
-      <name>dfs.namenode.servicerpc-address</name>
-      <value>0.0.0.0:54457</value>
-    </property> -->
-
-
-
+      <name>dfs.client.use.datanode.hostname</name>
+      <value>false</value>
+    </property>
 
 </configuration>

@@ -9,29 +9,24 @@ datanode:
   extends:
     file: hadoop.yml
     service: datanode
-  links:
-    - namenode:namenode
   volumes:
     - /tmp/hdfs/datanode:/hdfs
 
 resource-manager:
   extends:
-    file: hadoop.yml
+    file: spark.yml
     service: resource-manager
-  links:
-    - namenode
-    - datanode
+
 
 spark-master:
   extends:
     file: spark.yml
     service: spark-master
   environment:
+    YARN_HEAPSIZE: 2048
+    SPARK_MASTER_HOST: spark-master
     PYTHONPATH: /usr/local/spark/dist
     PYSPARK_PYTHON: /usr/bin/python3
-  links:
-    - namenode
-    - resource-manager
 
 spark-worker:
   extends:
@@ -40,24 +35,18 @@ spark-worker:
   environment:
     PYTHONPATH: /usr/local/spark/dist
     PYSPARK_PYTHON: /usr/bin/python3
-  links:
-    - namenode
-    - resource-manager
-    - spark-master
+    SPARK_WORKER_WEBUI_PORT: 8081
+    SPARK_WORKER_PORT: 8881
+    SPARK_WORKER_MEMORY: 4g
+    SPARK_WORKER_CORES: 4
+    YARN_HEAPSIZE: 2048
 
 job-history:
   extends:
     file: hadoop.yml
     service: job-history
-  links:
-    - namenode
-    - datanode
-    - resource-manager
 
 spark-history:
   extends:
     file: spark.yml
     service: spark-history
-  links:
-    - spark-master
-    - spark-worker

@@ -1,12 +1,14 @@
-FROM gallna/yarn.hadoop:2.7.3
+FROM gallna/yarn.hadoop:2.7.3-4
 
 EXPOSE 4040 6066 7077 8080
-ENV SPARK_HOME=/usr/local/spark
+ENV SPARK_HOME=/usr/local/spark \
+    PATH=$PATH:/usr/local/spark/bin
 # SPARK
-ARG SPARK_ARCHIVE=http://d3kbcqa49mib13.cloudfront.net/spark-2.1.0-bin-hadoop2.7.tgz
+ARG SPARK_ARCHIVE=http://d3kbcqa49mib13.cloudfront.net/spark-2.2.0-bin-hadoop2.7.tgz
 # Installation
 RUN mkdir -p $SPARK_HOME && curl -s $SPARK_ARCHIVE | tar -xz --strip=1 -C $SPARK_HOME \
-    && cp $SPARK_HOME/yarn/spark-2.1.0-yarn-shuffle.jar $HADOOP_HOME/share/hadoop/yarn/lib \
-    && yum install -y epel-release && yum install -y python34 python34-setuptools && easy_install-3.4 pip
+    && cp $SPARK_HOME/yarn/spark-2.2.0-yarn-shuffle.jar $HADOOP_HOME/share/hadoop/yarn/lib/ \
+    && yum install -y python34 python34-setuptools && easy_install-3.4 pip
 
+COPY etc/spark/* $SPARK_HOME/conf/
 WORKDIR $SPARK_HOME

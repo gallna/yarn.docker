@@ -1,8 +1,8 @@
-FROM centos:centos6
+FROM centos:centos7
 
 # Hdfs and Yarn ports
 EXPOSE 8020 50010 50020 50070 50075 10020 19888 8030 8031 8032 8033 8088
-ENV USER=root \
+ENV JAVA_HOME=/usr/java/default \
     HADOOP_HOME=/usr/local/hadoop \
     HADOOP_PREFIX=/usr/local/hadoop \
     HADOOP_COMMON_HOME=/usr/local/hadoop \
@@ -10,23 +10,26 @@ ENV USER=root \
     HADOOP_MAPRED_HOME=/usr/local/hadoop \
     HADOOP_YARN_HOME=/usr/local/hadoop \
     HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop \
+    HADOOP_COMMON_LIB_NATIVE_DIR=/usr/local/hadoop/lib/native \
+    JAVA_LIBRARY_PATH=/usr/local/hadoop/lib/native \
     YARN_CONF_DIR=/usr/local/hadoop/etc/hadoop \
-    JAVA_HOME=/usr/local/java \
-    PATH=$PATH:/usr/local/java/bin:/usr/local/hadoop/bin
+    PATH=$PATH:/usr/local/hadoop/bin
 # JAVA
-ARG JAVA_ARCHIVE=http://ie.archive.ubuntu.com/funtoo/distfiles/oracle-java/jdk-8u144-linux-x64.tar.gz
+ARG JAVA_ARCHIVE=http://download.oracle.com/otn-pub/java/jdk/8u144-b01/090f390dda5b47b9b721c7dfaa008135/jdk-8u144-linux-x64.rpm
 # HADOOP
 ARG HADOOP_ARCHIVE=http://www.eu.apache.org/dist/hadoop/common/hadoop-2.7.3/hadoop-2.7.3.tar.gz
 # Installation
-RUN mkdir -p $JAVA_HOME && curl -sSL $JAVA_ARCHIVE | tar -xz --strip=1 -C $JAVA_HOME \
-    && mkdir -p $HADOOP_HOME && curl -s $HADOOP_ARCHIVE | tar -xz --strip=1 -C $HADOOP_HOME \
-    && cp $HADOOP_HOME/lib/native/* $HADOOP_HOME/lib
+RUN curl -sSL --header "Cookie: oraclelicense=accept-securebackup-cookie" $JAVA_ARCHIVE > jdk.rpm \
+    && mkdir -p $HADOOP_HOME && curl -sSL $HADOOP_ARCHIVE | tar -xz --strip=1 -C $HADOOP_HOME \
+    && yum install -y epel-release && yum localinstall -y jdk.rpm && rm jdk.rpm \
+    && yum install -y xmlstarlet which net-tools bind-utils iproute
 # hadoop workdir
 WORKDIR $HADOOP_HOME
 # basic configuration
 COPY etc/hadoop/* $HADOOP_CONF_DIR/
 # entrypoint script
 COPY bin/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY bin/config.sh /usr/local/bin/config.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 # entrypoint help message as default command
 CMD ["--help"]

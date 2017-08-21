@@ -11,59 +11,83 @@ print_env() {
   echo && IFS=:; printf "%s\n" $CLASSPATH && echo
   echo && IFS=:; printf "%s\n" $(hdfs classpath) && echo
 }
-. $HADOOP_PREFIX/libexec/hdfs-config.sh
 
-HDFS_CLUSTER_NAME=${HDFS_CLUSTER_NAME-"the-cluster"}
+classpath() {
+  # find $1 -type f -name "*.jar" | xargs -I{} dirname {} | uniq | sed -e 's/$/\/\*/' | paste -sd:
+  find $1 -type f -name "*.jar" | paste -sd:
+}
 
-### NameNode
+export CLASSPATH=${CLASSPATH-$(classpath $HADOOP_HOME)}
+export SPARK_CLASSPATH=${SPARK_CLASSPATH-$(classpath $SPARK_HOME)}
+export JAVA_LIBRARY_PATH=${JAVA_LIBRARY_PATH-"$HADOOP_HOME/lib/native"}
+export HDFS_CLUSTER_NAME=${HDFS_CLUSTER_NAME-"the-cluster"}
+export SPARK_NO_DAEMONIZE=true
+
+source $HADOOP_PREFIX/libexec/hadoop-config.sh
+
+spark-submit() {
+  $SPARK_HOME/bin/spark-submit \
+  	--class org.apache.spark.examples.SparkPi \
+  	--master yarn \
+    --queue default \
+  	--deploy-mode client \
+    /usr/local/spark/examples/jars/spark-examples_2.11-2.2.0.jar
+}
+
+### NameNode ### $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start namenode ###
 namenode() {
-  # . $HADOOP_PREFIX/libexec/hdfs-config.sh
   # Formats the specified NameNode. Note: -nonInteractive option aborts formating if the name directory exists,.
   hdfs namenode -format $HDFS_CLUSTER_NAME -nonInteractive;
   # Start the HDFS with the following command, run on the designated NameNode:
   hdfs namenode
-  # $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start namenode
 }
 
-### DataNode
+### DataNode ### $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start datanode ###
 datanode() {
-  # . $HADOOP_PREFIX/libexec/hdfs-config.sh
-  hdfs datanode
   # Run a script to start DataNodes on all slaves:
-  # $HADOOP_PREFIX/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start datanode
+  hdfs datanode
 }
 
-
-### SparkMaster
+### SparkMaster ### $SPARK_HOME/sbin/start-master.sh ###
 sparkmaster() {
   # Run a script to start Spark Master:
   $SPARK_HOME/bin/spark-class org.apache.spark.deploy.master.Master
-}
-
-### SparkNode
-sparkworker() {
-  # Run a script to start Spark Worker:
-  $SPARK_HOME/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
-}
-
-### Spark JobHistory Server
-spark-history() {
-  # Start the MapReduce Spark Server with the following command, run on the designated server:
-  hdfs dfs -mkdir -p /shared/spark-logs
-  $SPARK_HOME/bin/spark-class org.apache.spark.deploy.history.HistoryServer
   stdout-logs ${SPARK_HOME}/logs
 }
 
-### NodeManager
-node-manager() {
-  # Run a script to start NodeManagers on all slaves:
-  $HADOOP_YARN_HOME/sbin/yarn-daemon.sh start nodemanager
+### SparkWorker ### $SPARK_HOME/sbin/start-slave.sh spark://spark-master:7077 ###
+sparkworker() {
+  # Run a script to start Spark Worker:
+  $SPARK_HOME/bin/spark-class org.apache.spark.deploy.worker.Worker \
+    spark://${SPARK_MASTER_HOST-spark-master}:${SPARK_MASTER_PORT-7077}
+  stdout-logs ${SPARK_HOME}/logs
 }
 
-### ResourceManager
+### Spark JobHistory Server ### $SPARK_HOME/bin/spark-class org.apache.spark.deploy.history.HistoryServer 1 ###
+spark-history() {
+  hdfs dfs -mkdir -p /shared/spark-logs
+  # Start the MapReduce Spark Server with the following command, run on the designated server:
+  $SPARK_HOME/sbin/start-history-server.sh
+  stdout-logs ${SPARK_HOME}/logs
+}
+
+### MapReduce JobHistory Server ### $HADOOP_PREFIX/sbin/mr-jobhistory-daemon.sh --config $HADOOP_CONF_DIR start historyserver ###
+job-history() {
+  hdfs dfs -mkdir -p /shared/spark-logs
+  # Start the MapReduce JobHistory Server with the following command, run on the designated server:
+  $HADOOP_PREFIX/bin/mapred historyserver
+}
+
+### NodeManager ### $HADOOP_YARN_HOME/sbin/yarn-daemon.sh start nodemanager ###
+node-manager() {
+  # Run a script to start NodeManagers on all slaves:
+  yarn --config "${YARN_CONF_DIR}" nodemanager "$@"
+}
+
+### ResourceManager ### $HADOOP_YARN_HOME/sbin/yarn-daemon.sh start resourcemanager ###
 resource-manager() {
   # Start the YARN with the following command, run on the designated ResourceManager:
-  $HADOOP_YARN_HOME/sbin/yarn-daemon.sh start resourcemanager
+  yarn --config "${YARN_CONF_DIR}" resourcemanager "$@"
 }
 
 ### WebAppProxy server
@@ -72,48 +96,38 @@ web-app-proxy() {
   $HADOOP_YARN_HOME/sbin/yarn-daemon.sh start proxyserver
 }
 
-### MapReduce JobHistory Server
-job-history() {
-  $HADOOP_PREFIX/bin/mapred historyserver
-  # Start the MapReduce JobHistory Server with the following command, run on the designated server:
-  # $HADOOP_PREFIX/sbin/mr-jobhistory-daemon.sh --config $HADOOP_CONF_DIR start historyserver
-  PID=$(cat $(find ${HADOOP_MAPRED_PID_DIR-/tmp} -name "mapred-*.pid"))
-}
-
 # To start a Hadoop cluster you will need to start both the HDFS and YARN cluster.
 # Typically you choose one machine in the cluster to act as the NameNode and one machine as to act as the ResourceManager, exclusively.
 # The rest of the machines act as both a DataNode and NodeManager and are referred to as slaves.
 
-mapred-site() {
-  sed -i $(printf "s|<value>\w*:10020|<value>%s:10020|g" ${HDFS_MASTER_HOST-$(hostname)}) $HADOOP_CONF_DIR/mapred-site.xml
-  sed -i $(printf "s|<value>\w*:19888|<value>%s:19888|g" ${HDFS_MASTER_HOST-$(hostname)}) $HADOOP_CONF_DIR/mapred-site.xml
-  cat $HADOOP_CONF_DIR/mapred-site.xml
+# Valid log levels: ALL, TRACE, DEBUG, [INFO], WARN, ERROR, FATAL, OFF
+log-level() {
+  test -f $HADOOP_CONF_DIR/log4j.properties && \
+    sed "s~=\(ALL\|TRACE\|DEBUG\|INFO\|WARN\|ERROR\),\?~=${LOG_LEVEL}~g" $HADOOP_CONF_DIR/log4j.properties
+  test -f ${SPARK_HOME-}/conf/log4j.properties && \
+    sed "s~=\(ALL\|TRACE\|DEBUG\|INFO\|WARN\|ERROR\),\?~=${LOG_LEVEL}~g" $SPARK_HOME/conf/log4j.properties
 }
-yarn-site() {
-  sed -i $(printf "s|<value>resource-manager.docker</value>|<value>%s</value>|g" ${RESOURCE_MANAGER_HOST-$(hostname)}) $HADOOP_CONF_DIR/yarn-site.xml
-  sed -i $(printf "s|http://\w*:19888/jobhistory/logs|http://%s:19888/jobhistory/logs|g" ${JOB_HISTORY_HOST-$(hostname)}) $HADOOP_CONF_DIR/hdfs-site.xml
-  cat $HADOOP_CONF_DIR/yarn-site.xml
+
+update_config() {
+  if [[ -n "$1" && -f "$2" ]]; then
+    echo "${1}" | UPDATE=1 $(dirname $0)/config.sh "$2"
+    echo >&2 $(basename "$2") updated
+  fi
 }
-core-site() {
-  sed -i $(printf "s|hdfs://\w*:8020|hdfs://%s:8020|g" ${HDFS_MASTER_HOST-$(hostname)}) $HADOOP_CONF_DIR/core-site.xml
-  cat $HADOOP_CONF_DIR/core-site.xml
-}
+test -n ${LOG_LEVEL-} && log-level
+update_config "$core_site" "${HADOOP_CONF_DIR}/core-site.xml"
+update_config "$hdfs_site" "${HADOOP_CONF_DIR}/hdfs-site.xml"
+update_config "$yarn_site" "${YARN_CONF_DIR}/yarn-site.xml"
+update_config "$mapred_site" "${HADOOP_CONF_DIR}/mapred-site.xml"
+update_config "$capacity_scheduler" "${HADOOP_CONF_DIR}/capacity-scheduler.xml"
 
 # keep container running by displaying selected service logs
 stdout-logs() {
   local logs=${1-${STDOUT_LOGS_TARGET-${HADOOP_PREFIX}/logs}}
-  args=( --retry ); test -z ${PID-} || args=( --pid=${PID} )
   test -e ${logs} && while true; do
-    if [[ -d ${logs} ]]; then
-      tail ${args[@]} -f ${logs}/*
-    else
-      tail ${args[@]} -f ${logs}
-    fi
+    if [[ -d ${logs} ]]; then tail -f ${logs}/*; else tail -f ${logs}; fi
   done
 }
-
-# start bash if nothing selected
-[[ 0 == $# ]] && echo "missing command"&& exit 2
 
 help() {
   cat <<HELPMESSAGE
@@ -137,35 +151,34 @@ help() {
       -p, --web-app-proxy     WebAppProxy server
       -j, --job-history       MapReduce JobHistory Server
       -J, --spark-history     MapRedSparkuce JobHistory Server
-
 HELPMESSAGE
   exit 0;
 }
 
+# start bash if nothing selected
+[[ 0 == $# ]] && echo "missing command" && exit 2
+
+exec 3>&1
+exec 4>&2
+
+with_logger() {
+  exec 1> >(while read line; do echo "$(basename $1 .sh): $line"; done >&3)
+  exec 2> >(while read line; do echo "$(basename $1 .sh): $line"; done >&4)
+  type $1 | grep 'function' > /dev/null && eval "$@" || exec $@
+}
+
 OPTIND=1
-while getopts "hcyeswWnNdDmrwjJp-:" opt; do
+while getopts "hswWnNdDmrwjJp-:" opt; do
   echo "Option: $opt"
   case "$opt" in
     h) help ;;
-    c) core-site ;;
-    y) yarn-site ;;
-    e) mapred-site ;;
     n) namenode ;;
     d) datanode ;;
     s) sparkmaster ;;
     w) sparkworker ;;
-    N)
-      core-site
-      namenode
-      ;;
-    D)
-      node-manager &
-      datanode
-      ;;
-    W)
-      node-manager &
-      sparkworker
-      ;;
+    N) namenode ;;
+    D) with_logger node-manager & datanode ;;
+    W) with_logger node-manager & sparkworker ;;
     m) node-manager ;;
     r) resource-manager ;;
     p) web-app-proxy ;;
@@ -186,6 +199,7 @@ while getopts "hcyeswWnNdDmrwjJp-:" opt; do
         web-app-proxy) web-app-proxy ;;
         job-history) job-history ;;
         spark-history) spark-history ;;
+        spark-submit) spark-submit ;;
       esac;;
     esac
 done
@@ -193,15 +207,12 @@ shift $((OPTIND-1))
 [ "$1" = "--" ] && shift
 
 # exec additional/different command
-if [[ "$@" ]]; then
-  echo "unrecognized option '$@'"
+if [[ $# -gt 0 ]]; then
+  echo "executing '$@'"
   exec "$@"
 fi
 
 # Use STDOUT_LOGS_TARGET environment to display particular log file/directory
 STDOUT_LOGS_TARGET=${STDOUT_LOGS_TARGET-${HADOOP_PREFIX}/logs}
-
 # keep container running by displaying selected service logs
 stdout-logs ${STDOUT_LOGS_TARGET}
-
-# test -d /usr/local/hadoop/logs && tail -f /usr/local/hadoop/logs/*.log || exec "$@"
