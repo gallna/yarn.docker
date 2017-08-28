@@ -16,7 +16,8 @@ resource-manager:
   extends:
     file: spark.yml
     service: resource-manager
-
+  environment:
+    LOG_LEVEL: WARN
 
 spark-master:
   extends:
@@ -27,6 +28,12 @@ spark-master:
     SPARK_MASTER_HOST: spark-master
     PYTHONPATH: /usr/local/spark/dist
     PYSPARK_PYTHON: /usr/bin/python3
+    LOG_LEVEL: WARN
+    yarn_site: |
+      yarn.scheduler.maximum-allocation-mb    4096
+      yarn.scheduler.increment-allocation-mb  512
+    hdfs_site: |
+      dfs.safemode.threshold.pct 0
 
 spark-worker:
   extends:
@@ -40,13 +47,23 @@ spark-worker:
     SPARK_WORKER_MEMORY: 4g
     SPARK_WORKER_CORES: 4
     YARN_HEAPSIZE: 2048
+    LOG_LEVEL: WARN
+    yarn_site: |
+      yarn.scheduler.maximum-allocation-mb    4096
+      yarn.scheduler.increment-allocation-mb  512
+    hdfs_site: |
+      dfs.safemode.threshold.pct 0
 
 job-history:
   extends:
     file: hadoop.yml
     service: job-history
+  environment:
+    LOG_LEVEL: WARN
 
 spark-history:
   extends:
     file: spark.yml
     service: spark-history
+  environment:
+    LOG_LEVEL: WARN

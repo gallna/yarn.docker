@@ -1,5 +1,5 @@
 spark:
-  image: gallna/yarn.spark:2.2.0-4
+  image: gallna/yarn.spark:2.2.0-5
   # build: .
   # dockerfile: "Dockerfile.spark"
   environment:
@@ -7,6 +7,8 @@ spark:
     yarn_site: |
       yarn.scheduler.maximum-allocation-mb    4096
       yarn.scheduler.increment-allocation-mb  512
+    hdfs_site: |
+      dfs.safemode.threshold.pct 0
   volumes:
     - ~/projects/python/s3-xml/dist:/usr/local/spark/dist
     # - ./etc/spark/log4j.properties:/usr/local/spark/conf/log4j.properties
@@ -23,7 +25,8 @@ spark:
 
 spark-master:
   extends: spark
-  entrypoint: entrypoint.sh --sparkmaster
+  # entrypoint: entrypoint.sh --sparkmaster
+  command: --sparkmaster
   container_name: spark-master
   hostname: spark-master
   environment:
@@ -39,7 +42,8 @@ spark-master:
 
 spark-worker:
   extends: spark
-  entrypoint: entrypoint.sh -W
+  # entrypoint: entrypoint.sh -W
+  command: -W
   container_name: spark-worker
   hostname: spark-worker
   environment:
@@ -50,7 +54,8 @@ spark-worker:
 
 spark-history:
   extends: spark
-  entrypoint: entrypoint.sh --spark-history
+  # entrypoint: entrypoint.sh --spark-history
+  command: --spark-history
   container_name: spark-history
   hostname: spark-history
   ports:
@@ -58,7 +63,8 @@ spark-history:
 
 resource-manager:
   extends: spark
-  entrypoint: entrypoint.sh --resource-manager
+  # entrypoint: entrypoint.sh --resource-manager
+  command: --resource-manager
   container_name: resource-manager
   hostname: resource-manager
   expose:

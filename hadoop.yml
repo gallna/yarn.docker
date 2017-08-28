@@ -1,5 +1,5 @@
 hdfs:
-  image: gallna/yarn.hadoop:2.7.3-4
+  image: gallna/yarn.hadoop:2.7.3-5
   # build: .
   # dockerfile: "Dockerfile.hadoop"
   environment:
@@ -7,6 +7,9 @@ hdfs:
     yarn_site: |
       yarn.scheduler.maximum-allocation-mb    4096
       yarn.scheduler.increment-allocation-mb  512
+    hdfs_site: |
+      dfs.namenode.safemode.threshold-pct 0
+      dfs.namenode.safemode.min.datanodes 0
   volumes:
     - ./bin/entrypoint.sh:/usr/local/bin/entrypoint.sh
     # - ./bin/config.sh:/usr/local/bin/config.sh
@@ -21,7 +24,8 @@ hdfs:
 
 namenode:
   extends: hdfs
-  entrypoint: entrypoint.sh -N
+  # entrypoint: entrypoint.sh -N
+  command: -N
   container_name: namenode
   hostname: namenode
   expose:
@@ -31,7 +35,8 @@ namenode:
 
 datanode:
   extends: hdfs
-  entrypoint: entrypoint.sh --datanode
+  # entrypoint: entrypoint.sh --datanode
+  command: --datanode
   container_name: datanode
   hostname: datanode
   expose:
@@ -42,7 +47,8 @@ datanode:
 
 resource-manager:
   extends: hdfs
-  entrypoint: entrypoint.sh --resource-manager
+  # entrypoint: entrypoint.sh --resource-manager
+  command: --resource-manager
   container_name: resource-manager
   hostname: resource-manager
   expose:
@@ -54,7 +60,8 @@ resource-manager:
 
 job-history:
   extends: hdfs
-  entrypoint: entrypoint.sh --job-history
+  # entrypoint: entrypoint.sh --job-history
+  command: --job-history
   container_name: job-history
   hostname: job-history
   expose:
@@ -68,7 +75,8 @@ job-history:
 
 web-app-proxy:
   extends: hdfs
-  entrypoint: entrypoint.sh --web-app-proxy
+  # entrypoint: entrypoint.sh --web-app-proxy
+  command: --web-app-proxy
   container_name: web-app-proxy
   hostname: web-app-proxy
   ports:

@@ -31,4 +31,36 @@
       <value>false</value>
     </property>
 
+    <!-- Safe Mode in Hadoop http://hadooptutorial.info/safe-mode-in-hadoop/ -->
+    <property>
+        <name>dfs.namenode.safemode.threshold-pct</name>
+        <value>0</value>
+    </property>
+
+    <property>
+        <name>dfs.namenode.safemode.min.datanodes</name>
+        <value>0</value>
+    </property>
+
+    <property>
+     <name>dfs.namenode.rpc-address</name>
+     <value>namenode:8020</value>
+    </property>
+    <property>
+      <name>dfs.namenode.http-address</name>
+      <value>namenode:50070</value>
+    </property>
+    <property>
+      <name>dfs.namenode.servicerpc-address</name>
+      <value>namenode:8040</value>
+    </property>
+    <property>
+      <name>dfs.namenode.lifeline.rpc-address</name>
+      <value>namenode:8050</value>
+    </property>
+
+    <property>
+      <name>dfs.permissions</name>
+      <value>false</value>
+    </property>
 </configuration>
